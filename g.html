@@ -1,1 +1,784 @@
-1
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>日本株式市場アナリティクス | プロフェッショナルな投資分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        jpred: '#BC002D',
+                        jpdarkred: '#9A0024',
+                        jpnavy: '#1E2A4A',
+                        jpgray: '#555555',
+                        jplight: '#F5F5F5',
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 3s infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .btn-glow {
+            box-shadow: 0 0 5px #BC002D;
+            animation: glow 1.5s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px #BC002D; }
+            to { box-shadow: 0 0 20px #BC002D; }
+        }
+        
+        .notification-badge {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+        
+        /* Dark mode styles */
+        .dark body {
+            background-color: #121212;
+            color: #F8F9FA;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #BC002D;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9A0024;
+        }
+        
+        /* Stock chart animation */
+        @keyframes chartLine {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+        
+        .chart-line {
+            animation: chartLine 3s ease-out forwards;
+        }
+        
+        /* Input field focus styles */
+        .stock-input:focus {
+            border-color: #BC002D;
+            box-shadow: 0 0 0 3px rgba(188, 0, 45, 0.2);
+        }
+        
+        /* Button hover effect */
+        .jp-button {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .jp-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-jpnavy text-jpnavy dark:text-white">
+    <!-- Notification Icon -->
+    <div class="notification-badge">
+        <div class="relative cursor-pointer bg-jpred rounded-full shadow-lg w-[60px] h-[60px] flex items-center justify-center" onclick="openModal('genericModal')">
+            <i class="fab fa-line text-white text-2xl"></i>
+            <div class="absolute -top-1 -right-1 bg-white text-jpred text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">1</div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <header class="relative overflow-hidden bg-gradient-to-r from-jpnavy to-black text-white">
+        <div class="absolute inset-0 opacity-30">
+            <img src="https://pfst.cf2.poecdn.net/base/image/3adf6336474f4e8bfb226770625293b029022c56969496c0c82f9910754d084a?w=1224&h=668" alt="Stock Market Data" class="w-full h-full object-cover">
+        </div>
+        
+        <div class="container mx-auto px-4 py-12 md:py-20 relative z-10">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-3xl md:text-5xl font-bold mb-6">株式投資で<span class="text-jpred">失敗</span>し続けますか？</h1>
+                <p class="text-xl md:text-2xl mb-8">プロフェッショナルな分析と戦略で、あなたの投資を次のレベルへ</p>
+                
+                <div class="bg-white/10 backdrop-blur-sm p-4 md:p-6 rounded-lg shadow-lg mb-8">
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+                        <div class="flex-1">
+                            <p class="text-2xl font-bold text-white"><span id="countdown-days">02</span>日</p>
+                            <p class="text-sm">日数</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-2xl font-bold text-white"><span id="countdown-hours">12</span>時</p>
+                            <p class="text-sm">時間</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-2xl font-bold text-white"><span id="countdown-minutes">45</span>分</p>
+                            <p class="text-sm">分</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-2xl font-bold text-white"><span id="countdown-seconds">33</span>秒</p>
+                            <p class="text-sm">秒</p>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-red-300">限定無料分析が終了するまで！</p>
+                </div>
+                
+                <div class="bg-white/20 p-5 rounded-lg mb-6">
+                    <h3 class="text-xl font-semibold mb-3">あなたの株式を分析しましょう</h3>
+                    <div class="flex flex-col md:flex-row items-center gap-3">
+                        <input type="text" id="stockInput1" placeholder="株式コードまたは名前を入力してください" class="stock-input flex-1 px-4 py-3 rounded-lg text-jpnavy text-base w-full md:w-auto">
+                        <button onclick="validateAndOpenModal('stockInput1')" class="jp-button bg-jpred hover:bg-jpdarkred text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 btn-glow w-full md:w-auto mt-3 md:mt-0">
+                            今すぐ分析する
+                        </button>
+                    </div>
+                    <p class="text-xs mt-2 text-white/70">例: 7203（トヨタ）、9984（ソフトバンク）</p>
+                </div>
+                
+                <p class="mt-4 text-sm opacity-80"><i class="fas fa-users mr-2"></i>今週5,274人の投資家が参加しました</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Pain Points Section -->
+    <section class="py-12 md:py-20 bg-white dark:bg-jpnavy/90">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">なぜ多くの投資家が<span class="text-jpred">損失</span>を出し続けるのか？</h2>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-jplight dark:bg-jpnavy/80 p-6 rounded-lg shadow-md">
+                        <div class="flex items-start">
+                            <div class="bg-jpred text-white rounded-full p-3 mr-4">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">市場タイミングの失敗</h3>
+                                <p>多くの投資家は「市場のタイミング」を図ろうとして、高値で買い、安値で売る - 成功する投資家とは正反対の行動を取っています。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-jplight dark:bg-jpnavy/80 p-6 rounded-lg shadow-md">
+                        <div class="flex items-start">
+                            <div class="bg-jpred text-white rounded-full p-3 mr-4">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">感情的な投資判断</h3>
+                                <p>恐怖と欲望が投資判断を左右し、市場の下落時にパニック売りや、高値でのFOMO買いを引き起こします。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-jplight dark:bg-jpnavy/80 p-6 rounded-lg shadow-md">
+                        <div class="flex items-start">
+                            <div class="bg-jpred text-white rounded-full p-3 mr-4">
+                                <i class="fas fa-search-dollar"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">情報過多</h3>
+                                <p>無数の銘柄と終わりのない経済ニュースの中で、本当の投資機会を見つけることはほぼ不可能になっています。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-jplight dark:bg-jpnavy/80 p-6 rounded-lg shadow-md">
+                        <div class="flex items-start">
+                            <div class="bg-jpred text-white rounded-full p-3 mr-4">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">アルゴリズム取引の不利</h3>
+                                <p>機関投資家のAIアルゴリズムと高頻度取引システムは、個人投資家を大きく不利な立場に置いています。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center">
+                    <div class="bg-white/20 p-5 rounded-lg mb-6 dark:bg-white/5">
+                        <h3 class="text-xl font-semibold mb-3">あなたの株式を分析しましょう</h3>
+                        <div class="flex flex-col md:flex-row items-center gap-3">
+                            <input type="text" id="stockInput2" placeholder="株式コードまたは名前を入力してください" class="stock-input flex-1 px-4 py-3 rounded-lg text-jpnavy text-base w-full md:w-auto">
+                            <button onclick="validateAndOpenModal('stockInput2')" class="jp-button bg-jpred hover:bg-jpdarkred text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 btn-glow w-full md:w-auto mt-3 md:mt-0">
+                                無料診断を受ける
+                            </button>
+                        </div>
+                        <p class="text-xs mt-2 opacity-70">例: 6758（ソニー）、8306（三菱UFJ）</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authority Section -->
+    <section class="py-16 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-jpnavy/80 dark:to-black">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-16">
+                    <span class="bg-jpred text-white text-sm font-bold py-1 px-3 rounded-full">市場洞察</span>
+                    <h2 class="text-3xl md:text-4xl font-bold mt-4 mb-6">私たちの実績が証明しています</h2>
+                    <p class="text-lg md:text-xl max-w-3xl mx-auto">当社の独自アルゴリズムは、日本の主要10社以上の株価動向を正確に予測してきました</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-10">
+                    <div class="relative">
+                        <img src="https://www.finacestock.online/steptodown.com144813.jpg" alt="Stock Trading Dashboard" class="rounded-lg shadow-lg w-full">
+                        <div class="absolute -bottom-5 -right-5 bg-white dark:bg-jpnavy p-3 rounded-lg shadow-lg">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/4defc1d7a843119b58a6a13041e92d5fb7dc9f8b2655eda5061d789f05858f3e?w=1224&h=816" alt="Financial data" class="w-20 h-20 object-cover rounded">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-2xl font-bold mb-6">成功した予測実績：</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium"><span class="font-bold">トヨタ自動車 (7203)</span> - 四半期決算前に23%の上昇を予測</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium"><span class="font-bold">ソニーグループ (6758)</span> - ゲーム部門拡大前に31%の成長を予想</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium"><span class="font-bold">ソフトバンクグループ (9984)</span> - 投資戦略変更前に28%の上昇を分析</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium"><span class="font-bold">任天堂 (7974)</span> - 新製品発表前に25%の株価上昇を予測</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium"><span class="font-bold">三菱UFJフィナンシャル (8306)</span> - 金利政策変更前に19%上昇を特定</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fas fa-plus text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium">さらに5つの成功事例があります...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 bg-white/20 p-5 rounded-lg dark:bg-white/5">
+                            <h3 class="text-xl font-semibold mb-3">株式診断を受けてみましょう</h3>
+                            <div class="flex flex-col md:flex-row items-center gap-3">
+                                <input type="text" id="stockInput3" placeholder="株式コードまたは名前を入力してください" class="stock-input flex-1 px-4 py-3 rounded-lg text-jpnavy text-base w-full md:w-auto">
+                                <button onclick="validateAndOpenModal('stockInput3')" class="jp-button bg-jpred hover:bg-jpdarkred text-white font-bold py-3 px-6 rounded-lg transition-all w-full md:w-auto mt-3 md:mt-0">
+                                    今すぐ分析レポートを入手
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Strategy Section -->
+    <section class="py-16 bg-white dark:bg-jpnavy">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">プロフェッショナルな<span class="text-jpred">投資戦略</span>を学ぶ</h2>
+                
+                <div class="grid md:grid-cols-2 gap-10 mb-12">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-6">効果的な株式戦略技術</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="bg-jplight dark:bg-jpnavy/80 p-5 rounded-lg shadow-md">
+                                <h4 class="text-xl font-semibold mb-2">テクニカル分析の基本</h4>
+                                <p class="mb-4">チャートパターン、指標、トレンドラインの理解と実践的応用方法</p>
+                                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-jpred chart-line" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-jplight dark:bg-jpnavy/80 p-5 rounded-lg shadow-md">
+                                <h4 class="text-xl font-semibold mb-2">ファンダメンタル分析手法</h4>
+                                <p class="mb-4">企業の財務諸表、収益性指標、成長見通しの分析方法</p>
+                                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-jpred chart-line" style="width: 78%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-jplight dark:bg-jpnavy/80 p-5 rounded-lg shadow-md">
+                                <h4 class="text-xl font-semibold mb-2">リスク管理戦略</h4>
+                                <p class="mb-4">ポートフォリオ分散、ポジションサイジング、損切り戦略の最適化</p>
+                                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-jpred chart-line" style="width: 92%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col justify-center">
+                        <img src="https://www.finacestock.online/steptodown.com732325.jpg" alt="Trading Strategy" class="rounded-lg shadow-lg w-full mb-6">
+                        
+                        <div class="bg-jplight dark:bg-jpnavy/80 p-5 rounded-lg shadow-md">
+                            <h4 class="text-xl font-semibold mb-3">あなたの株式を分析しましょう</h4>
+                            <div class="flex flex-col md:flex-row items-center gap-3">
+                                <input type="text" id="stockInput4" placeholder="株式コードまたは名前を入力してください" class="stock-input flex-1 px-4 py-3 rounded-lg text-jpnavy text-base w-full">
+                                <button onclick="validateAndOpenModal('stockInput4')" class="jp-button bg-jpred hover:bg-jpdarkred text-white font-bold py-3 px-6 rounded-lg transition-all float-animation w-full md:w-auto mt-3 md:mt-0">
+                                    無料戦略分析
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-10">
+                    <p class="text-lg mb-6">当社の専門家が分析した投資戦略と技術分析を活用して、より賢明な投資判断を行いましょう</p>
+                    
+                    <button onclick="openModal('genericModal')" class="jp-button bg-jpred hover:bg-jpdarkred text-white text-lg font-bold py-3 px-8 rounded-full transition-all">
+                        専門家の分析を今すぐ受ける
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof Section -->
+    <section class="py-16 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-jpnavy/90 dark:to-black">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">多くの投資家から信頼されています</h2>
+                <p class="text-lg md:text-xl mb-12 max-w-3xl mx-auto">市場機会を活用している成功した投資家コミュニティに参加しましょう</p>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-white dark:bg-jpnavy/80 p-6 rounded-lg shadow-md">
+                        <div class="flex justify-center mb-4">
+                            <div class="flex">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                            </div>
+                        </div>
+                        <p class="italic mb-4">「彼らの株式予測は非常に正確でした。わずか3ヶ月でポートフォリオが22%増加しました。」</p>
+                        <div class="font-bold">田中 誠</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">退職金融アナリスト</div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-jpnavy/80 p-6 rounded-lg shadow-md">
+                        <div class="flex justify-center mb-4">
+                            <div class="flex">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                            </div>
+                        </div>
+                        <p class="italic mb-4">「初心者投資家として、このサービスを見つける前は迷子でした。彼らのガイダンスのおかげで、よくある間違いを避け、資産形成を始めることができました。」</p>
+                        <div class="font-bold">佐藤 美咲</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">中小企業経営者</div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-jpnavy/80 p-6 rounded-lg shadow-md">
+                        <div class="flex justify-center mb-4">
+                            <div class="flex">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <i class="fas fa-star text-yellow-400"></i>
+                            </div>
+                        </div>
+                        <p class="italic mb-4">「ソニーの決算前分析のおかげで、大きな損失を避け、代わりに29%の利益を得ることができました。」</p>
+                        <div class="font-bold">鈴木 健太</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">テクノロジー部門役員</div>
+                    </div>
+                </div>
+                
+                <div class="mt-12">
+                    <div class="p-4 bg-white dark:bg-jpnavy/60 rounded-lg inline-block">
+                        <div class="flex items-center justify-center">
+                            <i class="fas fa-users text-jpred text-2xl mr-3"></i>
+                            <span class="text-lg font-bold">3,487人の活発なコミュニティメンバー</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-10 bg-white/20 p-5 rounded-lg mb-6 dark:bg-white/5 max-w-2xl mx-auto">
+                    <h3 class="text-xl font-semibold mb-3">あなたの株式を分析しましょう</h3>
+                    <div class="flex flex-col md:flex-row items-center gap-3">
+                        <input type="text" id="stockInput5" placeholder="株式コードまたは名前を入力してください" class="stock-input flex-1 px-4 py-3 rounded-lg text-jpnavy text-base w-full md:w-auto">
+                        <button onclick="validateAndOpenModal('stockInput5')" class="jp-button bg-jpred hover:bg-jpdarkred text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 btn-glow w-full md:w-auto mt-3 md:mt-0">
+                            成功への第一歩
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-white dark:bg-jpnavy">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">私たちの分析が<span class="text-jpred">違う理由</span></h2>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="bg-jplight dark:bg-jpnavy/80 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                            <i class="fas fa-robot text-jpred text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">先進的AIアナリティクス</h3>
+                        <p>当社の独自アルゴリズムは、企業ごとに10,000以上のデータポイントを分析し、他者が見逃す収益機会を特定します。</p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="bg-jplight dark:bg-jpnavy/80 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                            <i class="fas fa-shield-alt text-jpred text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">リスク評価</h3>
+                        <p>各推奨銘柄には明確なリスク指標を提供し、バランスの取れた投資判断を可能にします。</p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="bg-jplight dark:bg-jpnavy/80 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                            <i class="fas fa-chart-line text-jpred text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">タイミング精度</h3>
+                        <p>各推奨銘柄の最大利益ポテンシャルを実現するための正確なエントリーポイントとイグジットポイントを把握できます。</p>
+                    </div>
+                </div>
+                
+                <div class="mt-16 text-center">
+                    <div class="inline-block bg-white dark:bg-jpnavy/80 p-6 rounded-lg shadow-lg">
+                        <div class="flex items-center justify-center mb-4">
+                            <i class="fas fa-clock text-jpred text-2xl mr-3"></i>
+                            <span class="text-xl font-bold">期間限定のチャンス</span>
+                        </div>
+                        <p class="text-lg mb-6">当社のプレミアム洞察へのアクセスは、特定の市場条件下でのみ開放されます。キャパシティに達すると登録は締め切られます。</p>
+                        
+                        <div class="bg-jplight dark:bg-jpnavy/90 p-5 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-3">あなたの株式を分析しましょう</h3>
+                            <div class="flex flex-col md:flex-row items-center gap-3">
+                                <input type="text" id="stockInput6" placeholder="株式コードまたは名前を入力してください" class="stock-input flex-1 px-4 py-3 rounded-lg text-jpnavy text-base w-full">
+                                <button onclick="validateAndOpenModal('stockInput6')" class="jp-button bg-jpred hover:bg-jpdarkred text-white font-bold py-3 px-6 rounded-lg transition-all btn-glow w-full md:w-auto mt-3 md:mt-0">
+                                    今すぐあなたの席を確保
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="py-16 bg-gradient-to-br from-jpnavy to-black text-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-3xl md:text-5xl font-bold mb-6">投資結果を変革する準備はできていますか？</h2>
+                <p class="text-xl mb-10">次の高ポテンシャル銘柄推奨を逃さないでください</p>
+                
+                <div class="inline-block bg-white/10 backdrop-blur-sm p-6 rounded-lg">
+                    <img src="https://www.finacestock.online/steptodown.com983038.jpg" alt="Stock Market Data" class="w-full h-40 object-cover rounded-lg mb-6">
+                    
+                    <div class="bg-white/20 p-5 rounded-lg mb-6">
+                        <h3 class="text-xl font-semibold mb-3">最後のチャンス：無料分析</h3>
+                        <div class="flex flex-col md:flex-row items-center gap-3">
+                            <input type="text" id="stockInput7" placeholder="株式コードまたは名前を入力してください" class="stock-input flex-1 px-4 py-3 rounded-lg text-jpnavy text-base w-full">
+                            <button onclick="validateAndOpenModal('stockInput7')" class="jp-button bg-jpred hover:bg-jpdarkred text-white font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 btn-glow w-full md:w-auto mt-3 md:mt-0">
+                                今すぐ始める
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <p class="mt-4 text-sm opacity-80">
+                        <i class="fas fa-lock mr-1"></i> 安全なアクセス • <i class="fas fa-user-shield mr-1"></i> プライバシー保護
+                    </p>
+                </div>
+                
+                <div class="mt-12 flex flex-wrap justify-center gap-4">
+                    <div class="flex items-center bg-white/20 py-2 px-4 rounded-full">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span>実用的な洞察</span>
+                    </div>
+                    <div class="flex items-center bg-white/20 py-2 px-4 rounded-full">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span>明確なエントリー/イグジットポイント</span>
+                    </div>
+                    <div class="flex items-center bg-white/20 py-2 px-4 rounded-full">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span>リスク評価</span>
+                    </div>
+                    <div class="flex items-center bg-white/20 py-2 px-4 rounded-full">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span>専門家のサポート</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-black text-gray-400 text-sm">
+        <div class="container mx-auto px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-4 md:mb-0">
+                        <p>© 2023 日本株式分析. All rights reserved.</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <a href="#" class="hover:text-white">利用規約</a>
+                        <a href="#" class="hover:text-white">プライバシー</a>
+                        <a href="#" class="hover:text-white">免責事項</a>
+                    </div>
+                </div>
+                <div class="mt-4 text-xs text-center">
+                    <p class="mb-2">リスク開示：金融商品の取引には、元本を上回る損失の可能性を含む高いリスクが伴います。取引はすべての投資家に適しているわけではなく、関連するリスクを理解していることを確認する必要があります。</p>
+                    <p class="mb-2">投資アドバイス開示：提供される情報は投資アドバイスを構成するものではありません。投資の過去または潜在的なパフォーマンスへの言及は、推奨として、または特定の結果または利益の保証として解釈されるべきではありません。</p>
+                    <p>自身の財務状況、投資目標を考慮し、必要に応じて独立したアドバイスを求めるべきです。投資判断を行う前に、常に自身の調査を行ってください。</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Stock Analysis Modal -->
+    <div id="stockAnalysisModal" class="modal">
+        <div class="modal-content dark:bg-jpnavy max-w-lg">
+            <div class="absolute top-3 right-3">
+                <button onclick="closeModal('stockAnalysisModal')" class="text-gray-500 hover:text-gray-800 dark:hover:text-gray-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="text-center">
+                <div class="inline-block bg-jpred text-white rounded-full w-14 h-14 flex items-center justify-center mb-4">
+                    <i class="fab fa-line text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">あなたの株式分析レポートが生成されました</h3>
+                <p class="mb-6">LINEで無料の詳細分析を受け取りましょう</p>
+                
+                <div class="bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200 p-3 rounded-lg mb-6">
+                    <p id="stockClaimText"><i class="fas fa-users mr-2"></i> <strong>3,000人以上</strong>がこの株式のレポートを受け取りました</p>
+                </div>
+                
+                <div class="mb-6 flex justify-center">
+                    <img src="https://www.finacestock.online/2photo_2025-03-17_14-58-15.jpg" alt="LINE QR Code" class="w-[250px] h-[250px] object-cover border-2 border-jpred rounded-lg">
+                </div>
+                
+                <p class="text-lg font-medium mb-4">QRコードをスキャンするか、下のボタンをクリックして参加</p>
+                
+                <button onclick="opensite()" class="w-full bg-[#06C755] hover:bg-[#06a548] text-white font-bold py-3 rounded-lg transition-all mb-4">
+                    LINEで詳細分析を受け取る
+                </button>
+                
+                <p class="text-sm text-gray-500 dark:text-gray-400">プライバシーを尊重します。いつでも登録解除できます。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Modal -->
+    <div id="genericModal" class="modal">
+        <div class="modal-content dark:bg-jpnavy max-w-lg">
+            <div class="absolute top-3 right-3">
+                <button onclick="closeModal('genericModal')" class="text-gray-500 hover:text-gray-800 dark:hover:text-gray-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="text-center">
+                <div class="inline-block bg-jpred text-white rounded-full w-14 h-14 flex items-center justify-center mb-4">
+                    <i class="fab fa-line text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">プロの株式診断を受けましょう</h3>
+                <p class="mb-6">LINEで株式分析と取引戦略を無料で受け取る</p>
+                
+                <div class="bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200 p-3 rounded-lg mb-6">
+                    <p><i class="fas fa-users mr-2"></i> <strong>3,487人以上</strong>の投資家がすでに参加しています</p>
+                </div>
+                
+                <div class="mb-6 flex justify-center">
+                    <img src="https://www.finacestock.online/2photo_2025-03-17_14-58-15.jpg" alt="LINE QR Code" class="w-[250px] h-[250px] object-cover border-2 border-jpred rounded-lg">
+                </div>
+                
+                <p class="text-lg font-medium mb-4">QRコードをスキャンするか、下のボタンをクリックして参加</p>
+                
+                <button onclick="opensite()" class="w-full bg-[#06C755] hover:bg-[#06a548] text-white font-bold py-3 rounded-lg transition-all mb-4">
+                    LINEで詳細分析を受け取る
+                </button>
+                
+                <p class="text-sm text-gray-500 dark:text-gray-400">プライバシーを尊重します。いつでも登録解除できます。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        // Countdown timer
+        function updateCountdown() {
+            const now = new Date();
+            const endTime = new Date();
+            
+            // Set end time to 2 days from now
+            endTime.setDate(now.getDate() + 2);
+            endTime.setHours(23, 59, 59, 0);
+            
+            const diff = endTime - now;
+            
+            // Calculate days, hours, minutes, seconds
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            // Update the countdown elements
+            document.getElementById('countdown-days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('countdown-hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('countdown-minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('countdown-seconds').textContent = seconds.toString().padStart(2, '0');
+        }
+        
+        // Update countdown every second
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+        
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // LINE redirection
+        function opensite() {
+            window.open('https://line.me/ja/', '_blank');
+            closeModal('stockAnalysisModal');
+            closeModal('genericModal');
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+        
+        // Validate stock input and open modal
+        function validateAndOpenModal(inputId) {
+            const input = document.getElementById(inputId);
+            if (input.value.trim() === '') {
+                // Show error
+                input.classList.add('border-2', 'border-red-500');
+                input.placeholder = '株式コードを入力してください';
+                
+                // Remove error after 3 seconds
+                setTimeout(() => {
+                    input.classList.remove('border-2', 'border-red-500');
+                    input.placeholder = '株式コードまたは名前を入力してください';
+                }, 3000);
+                
+                return;
+            }
+            
+            // Set stock name in modal
+            const stockName = input.value;
+            const claimText = document.getElementById('stockClaimText');
+            if (claimText) {
+                claimText.innerHTML = `<i class="fas fa-users mr-2"></i> <strong>3,000人以上</strong>が「${stockName}」のレポートを受け取りました`;
+            }
+            
+            // Clear input field
+            input.value = '';
+            
+            // Open modal
+            openModal('stockAnalysisModal');
+        }
+    </script>
+</body>
+</html>
