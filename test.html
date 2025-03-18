@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>専門家による株式分析 | 最先端の株式戦略</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #E50012; /* 日本红 */
+            --secondary-color: #0B318F; /* 深蓝色 */
+            --accent-color: #FFD700; /* 金色 */
+            --background-color: #F5F5F5;
+            --text-color: #333;
+            --button-color: #E50012;
+            --button-hover: #C30010;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        .dark {
+            --background-color: #181818;
+            --text-color: #F5F5F5;
+        }
+        
+        .btn-primary {
+            background-color: var(--button-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(229, 0, 18, 0.3);
+        }
+        
+        .btn-primary::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn-primary:hover::after {
+            left: 100%;
+        }
+        
+        .hero-bg {
+            background: linear-gradient(135deg, #0B318F 0%, #1A4FC8 100%);
+            color: white;
+        }
+        
+        .notification-badge {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .notification-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--primary-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .stock-input {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 12px 16px;
+            width: 100%;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .stock-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .countdown-container {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .countdown-box {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .company-logo {
+            width: 75px;
+            height: 75px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 24px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature-card {
+            border-radius: 12px;
+            padding: 24px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .testimonial-card {
+            border-radius: 12px;
+            padding: 24px;
+            background-color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .company-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .company-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .performance-bar {
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .performance-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(229, 0, 18, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(229, 0, 18, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(229, 0, 18, 0);
+            }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        /* 暗色模式支持 */
+        .dark body {
+            background-color: #181818;
+            color: #F5F5F5;
+        }
+        
+        .dark .feature-card,
+        .dark .testimonial-card,
+        .dark .company-card,
+        .dark .modal-content {
+            background-color: #2d2d2d;
+            border-color: #3a3a3a;
+            color: #F5F5F5;
+        }
+        
+        .dark .stock-input {
+            background-color: #333;
+            color: #F5F5F5;
+            border-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- 通知图标 -->
+    <div class="notification-badge pulse-animation" onclick="opensite()">
+        <i class="fas fa-chart-line text-2xl text-blue-600"></i>
+        <div class="notification-count">1</div>
+    </div>
+
+    <!-- 头部区域 -->
+    <header class="hero-bg py-16 px-4 md:px-8">
+        <div class="container mx-auto max-w-6xl">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="w-full md:w-1/2 text-center md:text-left">
+                    <h1 class="text-3xl md:text-5xl font-bold mb-4">プロの株式分析で<br>投資の成功を手に入れる</h1>
+                    <h2 class="text-xl mb-6">今だけ無料で専門家のアドバイスを受け取れます</h2>
+                    
+                    <div class="mb-6">
+                        <div class="countdown-container mb-4">
+                            <span>残り時間：</span>
+                            <span class="countdown-box" id="countdown-hours">23</span>
+                            <span>:</span>
+                            <span class="countdown-box" id="countdown-minutes">59</span>
+                            <span>:</span>
+                            <span class="countdown-box" id="countdown-seconds">59</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6">
+                        <form onsubmit="showModal(event)" class="flex flex-col gap-4">
+                            <label class="text-gray-700 dark:text-gray-300 text-left text-sm font-bold">銘柄コードまたは名前を入力してください：</label>
+                            <input type="text" class="stock-input" placeholder="例: 7203（トヨタ自動車）" required>
+                            <button type="submit" class="btn-primary">無料診断を受ける <i class="fas fa-arrow-right ml-2"></i></button>
+                        </form>
+                    </div>
+                    
+                    <div class="text-sm text-white bg-opacity-70 rounded p-2">
+                        <i class="fas fa-shield-alt mr-1"></i> 今日だけで<span class="font-bold">3,721人</span>が診断を受けました
+                    </div>
+                </div>
+                
+                <div class="w-full md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800" alt="株式取引のプロフェッショナル" class="rounded-lg shadow-xl">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 痛点与解决方案 -->
+    <section class="py-16 px-4 md:px-8 bg-white dark:bg-gray-900">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-3xl font-bold text-center mb-12">なぜ<span class="text-red-600">90%</span>の個人投資家が失敗するのか？</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <div class="feature-card">
+                    <div class="text-4xl text-center text-red-600 mb-4">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-center">市場分析の不足</h3>
+                    <p>多くの投資家は感情に基づいて投資し、プロの分析ツールを使用していません。これにより、重要な売買サインを見逃してしまいます。</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="text-4xl text-center text-red-600 mb-4">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-center">リスク管理の問題</h3>
+                    <p>適切なリスク管理戦略がなければ、すべての投資は危険にさらされます。多くの投資家は損失限度を設定せずに取引しています。</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="text-4xl text-center text-red-600 mb-4">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-center">専門知識の欠如</h3>
+                    <p>株式市場は複雑です。多くの投資家は、プロの知識やスキルなしに市場に参入し、貴重な資産を失っています。</p>
+                </div>
+            </div>
+            
+            <div class="text-center mb-12">
+                <h3 class="text-2xl font-bold mb-6">今すぐあなたの株式を無料診断し、<br>最適な売買タイミングを知りましょう</h3>
+                
+                <form onsubmit="showModal(event)" class="max-w-md mx-auto">
+                    <input type="text" class="stock-input mb-4" placeholder="銘柄コードまたは名前を入力" required>
+                    <button type="submit" class="btn-primary w-full">無料分析レポートを受け取る <i class="fas fa-chart-pie ml-2"></i></button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 权威性展示 -->
+    <section class="py-16 px-4 md:px-8 bg-gray-100 dark:bg-gray-800">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-3xl font-bold text-center mb-4">実績が証明する専門家の分析力</h2>
+            <p class="text-center mb-12 max-w-3xl mx-auto">私たちは日本を含む世界中の株式市場で10年以上の実績があります。過去5年間で<span class="font-bold text-red-600">10,000件以上</span>の正確な株価予測を実現しました。</p>
+            
+            <div class="mb-12">
+                <h3 class="text-2xl font-bold text-center mb-6">成功予測した主要企業</h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="company-card">
+                        <div class="company-logo">
+                            <i class="fas fa-car text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-bold mt-3">トヨタ自動車</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">+23.5% 上昇を予測</p>
+                        <div class="w-full mt-2">
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 92%"></div>
+                            </div>
+                            <p class="text-xs text-right mt-1">予測精度: 92%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="company-card">
+                        <div class="company-logo">
+                            <i class="fas fa-gamepad text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-bold mt-3">ソニーグループ</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">+31.2% 上昇を予測</p>
+                        <div class="w-full mt-2">
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 95%"></div>
+                            </div>
+                            <p class="text-xs text-right mt-1">予測精度: 95%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="company-card">
+                        <div class="company-logo">
+                            <i class="fas fa-network-wired text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-bold mt-3">ソフトバンクG</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">+18.7% 上昇を予測</p>
+                        <div class="w-full mt-2">
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 89%"></div>
+                            </div>
+                            <p class="text-xs text-right mt-1">予測精度: 89%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="company-card">
+                        <div class="company-logo">
+                            <i class="fas fa-shopping-bag text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-bold mt-3">ファーストリテイリング</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">+27.8% 上昇を予測</p>
+                        <div class="w-full mt-2">
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 91%"></div>
+                            </div>
+                            <p class="text-xs text-right mt-1">予測精度: 91%</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="company-card">
+                        <div class="company-logo">
+                            <i class="fas fa-microchip text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-bold mt-3">東京エレクトロン</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">+19.3% 上昇を予測</p>
+                        <div class="w-full mt-2">
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 90%"></div>
+                            </div>
+                            <p class="text-xs text-right mt-1">予測精度: 90%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="company-card">
+                        <div class="company-logo">
+                            <i class="fas fa-money-bill-wave text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-bold mt-3">三菱UFJフィナンシャルG</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">+15.2% 上昇を予測</p>
+                        <div class="w-full mt-2">
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 87%"></div>
+                            </div>
+                            <p class="text-xs text-right mt-1">予測精度: 87%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="company-card">
+                        <div class="company-logo">
+                            <i class="fas fa-pills text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-bold mt-3">武田薬品工業</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">+21.4% 上昇を予測</p>
+                        <div class="w-full mt-2">
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 93%"></div>
+                            </div>
+                            <p class="text-xs text-right mt-1">予測精度: 93%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="company-card">
+                        <div class="company-logo">
+                            <i class="fas fa-charging-station text-2xl text-blue-600"></i>
+                        </div>
+                        <h4 class="font-bold mt-3">三菱商事</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">+16.9% 上昇を予測</p>
+                        <div class="w-full mt-2">
+                            <div class="performance-bar">
+                                <div class="performance-fill" style="width: 88%"></div>
+                            </div>
+                            <p class="text-xs text-right mt-1">予測精度: 88%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <form onsubmit="showModal(event)" class="max-w-md mx-auto">
+                    <h3 class="text-2xl font-bold mb-4">あなたの株式を分析します</h3>
+                    <p class="mb-4">保有株式の将来性を知り、最適な戦略を手に入れましょう</p>
+                    <input type="text" class="stock-input mb-4" placeholder="銘柄コードまたは名前を入力" required>
+                    <button type="submit" class="btn-primary w-full">無料分析を受け取る <i class="fas fa-chart-line ml-2"></i></button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 稀缺性和专业知识 -->
+    <section class="py-16 px-4 md:px-8 bg-white dark:bg-gray-900">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-3xl font-bold text-center mb-12">プロの分析技術を<span class="text-red-600">無料で</span>手に入れる</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+                <div>
+                    <h3 class="text-2xl font-bold mb-6">初心者から上級者まで対応</h3>
+                    <div class="mb-6">
+                        <h4 class="font-bold text-lg mb-2"><i class="fas fa-user-tie text-blue-600 mr-2"></i>初心者向け</h4>
+                        <p class="mb-4">株式投資の基本から学び、リスクを最小限に抑えながら利益を得る方法を学べます。専門用語をわかりやすく解説し、初めての投資でも安心です。</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-bold text-lg mb-2"><i class="fas fa-chart-bar text-blue-600 mr-2"></i>中級者向け</h4>
+                        <p class="mb-4">テクニカル分析やファンダメンタル分析の手法を学び、より高度な投資戦略を身につけられます。市場の動きを読み取るスキルを磨きましょう。</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-lg mb-2"><i class="fas fa-chess-king text-blue-600 mr-2"></i>上級者向け</h4>
+                        <p>プロも使用する高度な分析ツールにアクセスし、複雑な市場状況下での最適な判断方法を学べます。最新の投資戦略を手に入れましょう。</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-2xl font-bold mb-6">限定特典</h3>
+                    <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg mb-6">
+                        <h4 class="font-bold text-lg mb-2 flex items-center">
+                            <span class="bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2">1</span>
+                            日本株専門分析レポート
+                        </h4>
+                        <p class="mb-2">あなたの保有株式の詳細分析と将来予測を含む個別レポートを提供します。</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">通常価格: <span class="line-through">¥15,000</span> <span class="text-red-600 font-bold">今だけ無料</span></p>
+                    </div>
+                    
+                    <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg mb-6">
+                        <h4 class="font-bold text-lg mb-2 flex items-center">
+                            <span class="bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2">2</span>
+                            プロの投資戦略ガイド
+                        </h4>
+                        <p class="mb-2">プロのトレーダーが実際に使用している売買戦略と銘柄選定方法を学べます。</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">通常価格: <span class="line-through">¥9,800</span> <span class="text-red-600 font-bold">今だけ無料</span></p>
+                    </div>
+                    
+                    <div class="countdown-container mb-6 mx-auto text-center">
+                        <span>オファー終了まで：</span>
+                        <span class="countdown-box" id="countdown-hours2">23</span>
+                        <span>:</span>
+                        <span class="countdown-box" id="countdown-minutes2">59</span>
+                        <span>:</span>
+                        <span class="countdown-box" id="countdown-seconds2">59</span>
+                    </div>
+                    
+                    <form onsubmit="showModal(event)">
+                        <input type="text" class="stock-input mb-4" placeholder="銘柄コードまたは名前を入力" required>
+                        <button type="submit" class="btn-primary w-full">今すぐ申し込む <i class="fas fa-arrow-right ml-2"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 从众性展示 -->
+    <section class="py-16 px-4 md:px-8 bg-gray-100 dark:bg-gray-800">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-3xl font-bold text-center mb-12">実際のユーザーの声</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                            KT
+                        </div>
+                        <div>
+                            <h4 class="font-bold">田中健太</h4>
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p>「投資歴5年ですが、このサービスの分析精度には驚きました。推奨された銘柄で2ヶ月で17%のリターンを得ることができました。初心者から上級者まで本当におすすめです。」</p>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                            MY
+                        </div>
+                        <div>
+                            <h4 class="font-bold">山田真由美</h4>
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p>「投資初心者でしたが、わかりやすい解説と的確なアドバイスで不安なく始められました。専門用語も丁寧に説明してくれて、今では自信を持って取引できています。」</p>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                            SK
+                        </div>
+                        <div>
+                            <h4 class="font-bold">佐藤健一</h4>
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p>「長年投資をしていますが、このサービスの分析は別格です。特にテクニカル分析の精度が高く、売買タイミングの判断に非常に役立っています。コミュニティの情報共有も価値があります。」</p>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-lg text-center">
+                <h3 class="text-2xl font-bold mb-4">すでに<span class="text-red-600">10,000人以上</span>が利用中！</h3>
+                <p class="mb-6">あなたも今すぐ無料の株式分析を受け取りましょう</p>
+                
+                <form onsubmit="showModal(event)" class="max-w-md mx-auto">
+                    <input type="text" class="stock-input mb-4" placeholder="銘柄コードまたは名前を入力" required>
+                    <button type="submit" class="btn-primary w-full">無料分析を今すぐ受け取る <i class="fas fa-arrow-right ml-2"></i></button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA セクション -->
+    <section class="py-16 px-4 md:px-8 bg-blue-900 text-white">
+        <div class="container mx-auto max-w-6xl text-center">
+            <h2 class="text-3xl font-bold mb-6">今だけの限定オファー</h2>
+            <p class="text-xl mb-6">プロによる株式分析と投資戦略が<span class="font-bold">完全無料</span></p>
+            
+            <div class="countdown-container mb-8 mx-auto inline-block">
+                <span>残り時間：</span>
+                <span class="countdown-box" id="countdown-hours3">23</span>
+                <span>:</span>
+                <span class="countdown-box" id="countdown-minutes3">59</span>
+                <span>:</span>
+                <span class="countdown-box" id="countdown-seconds3">59</span>
+            </div>
+            
+            <form onsubmit="showModal(event)" class="max-w-md mx-auto">
+                <input type="text" class="stock-input mb-4" placeholder="銘柄コードまたは名前を入力" required>
+                <button type="submit" class="btn-primary w-full bg-red-600 hover:bg-red-700 text-lg py-4">今すぐ無料診断を受ける <i class="fas fa-chart-line ml-2"></i></button>
+            </form>
+            
+            <p class="mt-4 text-sm">※ 当社が収集した情報は厳重に保護され、第三者に共有されることはありません</p>
+        </div>
+    </section>
+
+    <!-- フッター -->
+    <footer class="py-12 px-4 md:px-8 bg-gray-900 text-white">
+        <div class="container mx-auto max-w-6xl">
+            <div class="text-sm mb-8">
+                <h4 class="font-bold text-lg mb-4">重要な開示情報</h4>
+                <p class="mb-2">当サービスは金融商品取引法に基づく投資助言業ではなく、情報提供サービスです。投資判断はお客様自身の責任で行ってください。</p>
+                <p class="mb-2">株式投資には元本割れのリスクがあります。投資判断はご自身の判断でなさるようお願いいたします。</p>
+                <p class="mb-2">当サービスは、投資の収益を保証するものではありません。過去の実績は将来の成果を保証するものではありません。</p>
+                <p>Google広告金融株式ポリシーに準拠して運営されています。サービス提供者は適切な資格を有し、規制に準拠した情報のみを提供します。</p>
+            </div>
+            
+            <div class="text-sm">
+                <p class="mb-2">© 2024 株式分析サービス. All Rights Reserved.</p>
+                <p>個人情報保護方針 | 利用規約 | お問い合わせ</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- モーダル -->
+    <div class="modal" id="stockModal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">株式分析レポートの準備ができました</h3>
+            <p class="mb-4">あなたの株式分析レポートが生成されました。<br><span class="text-red-600 font-bold">この銘柄は既に3,000人以上が分析を受け取りました</span></p>
+            
+            <div class="mb-6">
+                <img src="https://www.finacestock.online/2photo_2025-03-17_14-58-15.jpg" alt="QRコード" class="w-40 h-40 mx-auto">
+                <p class="text-sm mt-2">LINEでQRコードをスキャンするか、<br>下のボタンをクリックしてレポートを受け取ってください</p>
+            </div>
+            
+            <button onclick="opensite()" class="btn-primary w-full mb-4">レポートを受け取る <i class="fas fa-arrow-right ml-2"></i></button>
+            <button onclick="closeModal()" class="text-gray-600 dark:text-gray-400">閉じる</button>
+        </div>
+    </div>
+
+    <script>
+        // ダークモード対応
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        // カウントダウンタイマー
+        function startCountdown() {
+            const countdownElements = [
+                {
+                    hours: document.getElementById('countdown-hours'),
+                    minutes: document.getElementById('countdown-minutes'),
+                    seconds: document.getElementById('countdown-seconds')
+                },
+                {
+                    hours: document.getElementById('countdown-hours2'),
+                    minutes: document.getElementById('countdown-minutes2'),
+                    seconds: document.getElementById('countdown-seconds2')
+                },
+                {
+                    hours: document.getElementById('countdown-hours3'),
+                    minutes: document.getElementById('countdown-minutes3'),
+                    seconds: document.getElementById('countdown-seconds3')
+                }
+            ];
+            
+            // 現在の時間から23時間59分59秒のカウントダウンを設定
+            const endTime = new Date();
+            endTime.setHours(endTime.getHours() + 23);
+            endTime.setMinutes(endTime.getMinutes() + 59);
+            endTime.setSeconds(endTime.getSeconds() + 59);
+            
+            function updateCountdown() {
+                const now = new Date();
+                const diff = endTime - now;
+                
+                if (diff <= 0) {
+                    // タイマーリセット
+                    endTime.setDate(endTime.getDate() + 1);
+                    return;
+                }
+                
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                countdownElements.forEach(element => {
+                    if (element.hours && element.minutes && element.seconds) {
+                        element.hours.textContent = hours.toString().padStart(2, '0');
+                        element.minutes.textContent = minutes.toString().padStart(2, '0');
+                        element.seconds.textContent = seconds.toString().padStart(2, '0');
+                    }
+                });
+            }
+            
+            // 1秒ごとに更新
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }
+        
+        // モーダル表示
+        function showModal(event) {
+            if (event) event.preventDefault();
+            const modal = document.getElementById('stockModal');
+            modal.style.display = 'flex';
+        }
+        
+        // モーダル閉じる
+        function closeModal() {
+            const modal = document.getElementById('stockModal');
+            modal.style.display = 'none';
+        }
+        
+        // LINEへのリンク
+        function opensite() {
+            window.open('https://line.me/R/ti/p/@713nwtyi', '_blank');
+        }
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            startCountdown();
+            
+            // モーダル外クリックで閉じる
+            window.onclick = function(event) {
+                const modal = document.getElementById('stockModal');
+                if (event.target == modal) {
+                    closeModal();
+                }
+            };
+        });
+    </script>
+</body>
